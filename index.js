@@ -54,8 +54,11 @@ function validateJobInput(jobid, jobValue) {
 // Function to add a job with concurrency control
 async function addJob(jobid, jobValue) {
     validateJobInput(jobid, jobValue);
-    if (jobData.has(jobid) || lockedJobs.has(jobid)) {
-        throw new Error('Job ID already exists or is being processed');
+    if (jobData.has(jobid)) {
+        throw new Error('Job ID already exists.');
+    }
+    else if (lockedJobs.has(jobid)) {
+        throw new Error('Job ID is already being processed.');
     }
     // acquired a lock for current job
     lockedJobs.add(jobid);
@@ -73,15 +76,15 @@ async function addJob(jobid, jobValue) {
 }
 
 // Function to retrieve all jobs with caching
-async function getAllJobs(startvalue) {
+async function getAllJobs(jobValue) {
     const cachedJobs = cache.get('allJobs');
-    // if(cachedJobs){
-
-    //}
+    if (cachedJobs && !jobValue) {
+        return cachedJobs;
+    }
     const jobs = [];
-    for (const [jobid, jobValue] of jobData.entries()) {
-        if (!startvalue || jobValue >= startvalue) {
-            jobs.push({ JobID: jobid, JobValue: jobValue });
+    for (const [jobid, _jobValue] of jobData.entries()) {
+        if (!jobValue || _jobValue >= jobValue) {
+            jobs.push({ JobID: jobid, JobValue: _jobValue });
         }
     }
     // caching the result 
@@ -95,8 +98,11 @@ async function getAllJobs(startvalue) {
 async function removeJob(jobid) {
     validateJobInput(jobid, 100);
 
-    if (!jobData.has(jobid) || lockedJobs.has(jobid)) {
-        throw new Error('Job ID not found or is being processed');
+    if (!jobData.has(jobid)) {
+        throw new Error('Job ID not found.');
+    }
+    else if (lockedJobs.has(jobid)) {
+        throw new Error('Job ID is already being processed.');
     }
 
     // acquire a lock for this job
@@ -129,8 +135,8 @@ app.post('/add', async (req, res) => {
 // An endpoint for retrieving all jobs
 app.get('/all', async (req, res) => {
     try {
-        const { startvalue } = req.query;
-        const jobs = await getAllJobs(startvalue);
+        const { jobValue } = req.query;
+        const jobs = await getAllJobs(jobValue);
         logger.info('Retrieved all jobs');
         return res.status(200).json({ data: jobs });
     } catch (error) {
