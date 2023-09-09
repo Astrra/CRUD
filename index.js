@@ -76,10 +76,7 @@ async function addJob(jobid,jobValue){
 async function getAllJobs(startvalue){
     const cachedJobs=cache.get('allJobs');
     if(cachedJobs){
-        let low=0,high=cachedJobs.size();
-        while(low<=high){
-            
-        }
+       
     }
     const jobs=[];
     for(const [jobid,jobValue] of jobData.entries()){
