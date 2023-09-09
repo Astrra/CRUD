@@ -2,9 +2,10 @@ const express = require('express');
 const NodeCache = require('node-cache');
 const winston = require('winston');
 const expressWinston = require('express-winston');
-const cors = require('cors');
 const app = express();
 const port = 3000;
+
+
 // An empty Map to store job data
 const jobData = new Map();
 
