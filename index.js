@@ -5,20 +5,20 @@ const expressWinston=require('express-winston');
 const cors=require('cors');
 const app=express();
 const port=3000;
-//An empty Map to store job data
+// An empty Map to store job data
 const jobData=new Map();
 
-//Using a set to maintain concurrency control
+// Using a set to maintain concurrency control
 const lockedJobs=new Set();
 
-//Using cache for faster process
+// Using cache for faster process
 const cache=new NodeCache({stdTTL:30});
 
-//Middleware to parse JSON requests
+// Middleware to parse JSON requests
 app.use(express.json());
 
 
-//Logger Setup
+// Logger Setup
 const logger=winston.createLogger({
     level:'info',
     format:winston.format.json(),
@@ -28,7 +28,7 @@ const logger=winston.createLogger({
     ],
 });
 
-//Express-Winston logger for HTTP requests
+// Express-Winston logger for HTTP requests
 app.use(expressWinston.logger({
     transports:[
         new winston.transports.Console(),
@@ -44,35 +44,35 @@ app.use(expressWinston.logger({
     colorize:true,
 }));
 
-//A Function to validate job data
+// A Function to validate job data
 function validateJobInput(jobid,jobValue){
     if(!jobid || !jobValue){
         throw new Error('Invalid input data');
     }
 }
 
-//Function to add a job with concurrency control
+// Function to add a job with concurrency control
 async function addJob(jobid,jobValue){
     validateJobInput(jobid,jobValue);
     if(jobData.has(jobid) || lockedJobs.has(jobid)){
         throw new Error('Job ID already exists or is being processed');
     }
-    //acquired a lock for current job
+    // acquired a lock for current job
     lockedJobs.add(jobid);
 
-    //Simulating an asynchronous operation
+    // Simulating an asynchronous operation
     await new Promise((resolve)=>setTimeout(resolve,1000));
 
-    //Release the lock
+    // Release the lock
     lockedJobs.delete(jobid);
 
     jobData.set(jobid,jobValue);
 
-    //clearing cache to ensure all jobs are updated
+    // clearing cache to ensure all jobs are updated
     cache.del('allJobs');
 }
 
-//Function to retrieve all jobs with caching
+// Function to retrieve all jobs with caching
 async function getAllJobs(startvalue){
     const cachedJobs=cache.get('allJobs');
    // if(cachedJobs){
@@ -84,14 +84,14 @@ async function getAllJobs(startvalue){
             jobs.push({JobID:jobid, JobValue:jobValue});
         }
     }
-    //caching the result 
+    // caching the result 
     jobs.sort((a,b)=>a.JobValue-b.JobValue)
     cache.set('allJobs',jobs,10);
 
     return jobs;
 }
 
-//Function to remove a job with concurrency control
+// Function to remove a job with concurrency control
 async function removeJob(jobid){
     validateJobInput(jobid,100);
 
@@ -99,13 +99,13 @@ async function removeJob(jobid){
         throw new Error('Job ID not found or is being processed');
     }
 
-    //acquire a lock for this job
+    // acquire a lock for this job
     lockedJobs.add(jobid);
 
-    //Simulating an asynchronous operation
+    // Simulating an asynchronous operation
     await new Promise((resolve)=>setTimeout(resolve,1000));
 
-    //release the lock
+    // release the lock
     lockedJobs.delete(jobid);
 
     jobData.delete(jobid);
@@ -113,7 +113,7 @@ async function removeJob(jobid){
     cache.del('allJobs');
 }
 
-//An endpoint for adding a job
+// An endpoint for adding a job
 app.post('/add',async (req,res)=>{
     try{
         const {jobValue,jobid}=req.query;
@@ -126,7 +126,7 @@ app.post('/add',async (req,res)=>{
     }
 });
 
-//An endpoint for retrieving all jobs
+// An endpoint for retrieving all jobs
 app.get('/all',async (req,res)=>{
     try{
         const {startvalue} = req.query;
@@ -139,7 +139,7 @@ app.get('/all',async (req,res)=>{
     }
 });
 
-//An endpoint for removing a job
+// An endpoint for removing a job
 app.post('/remove',async (req,res)=>{
     try{
         const {jobid} = req.query;
@@ -153,7 +153,7 @@ app.post('/remove',async (req,res)=>{
     }
 });
 
-//Express Server
+// Express Server
 app.listen(port,()=>{
     console.log(`Server is running on port ${port}`);
 });
