@@ -75,9 +75,9 @@ async function addJob(jobid,jobValue){
 //Function to retrieve all jobs with caching
 async function getAllJobs(startvalue){
     const cachedJobs=cache.get('allJobs');
-    if(cachedJobs){
+   // if(cachedJobs){
        
-    }
+    //}
     const jobs=[];
     for(const [jobid,jobValue] of jobData.entries()){
         if(!startvalue || jobValue>=startvalue){
